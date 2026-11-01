@@ -1,23 +1,23 @@
-# 🧊 Cube Analytique Ventes — Spark SQL + Trino
+# Cube Analytique Ventes — Spark SQL + Trino
 
 > Pipeline analytique complet : ETL Spark SQL → Cube OLAP Parquet → Requêtes Trino → Dashboard Web
 
 ---
 
-## 📸 Aperçu & Screenshots
+## Aperçu et Screenshots
 
-### 📊 Dashboard Analytique Interactif (`http://localhost:8088`)
+### Dashboard Analytique Interactif (http://localhost:8088)
 ![Dashboard Analytique](docs/screenshots/dashboard.png)
 
-### ⚡ Spark Master Web UI (`http://localhost:8080`)
+### Spark Master Web UI (http://localhost:8080)
 ![Spark Master UI](docs/screenshots/spark_ui.png)
 
-### 🔍 Trino Web UI (`http://localhost:8085`)
+### Trino Web UI (http://localhost:8085)
 ![Trino Web UI](docs/screenshots/trino_ui.png)
 
 ---
 
-## 📁 Structure du projet
+## Structure du projet
 
 ```
 cube-analytique/
@@ -52,7 +52,7 @@ cube-analytique/
 
 ---
 
-##  Architecture
+## Architecture
 
 ```
 CSV bruts (local)
@@ -81,7 +81,7 @@ CSV bruts (local)
 
 ---
 
-##  Démarrage rapide
+## Démarrage rapide
 
 ### Prérequis
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installé
@@ -170,7 +170,7 @@ docker exec trino trino --server http://localhost:8080 \
 
 ---
 
-##  Interfaces web
+## Interfaces web
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
@@ -205,7 +205,7 @@ docker exec trino trino --server http://localhost:8080 \
 
 ---
 
-##  KPIs disponibles
+## KPIs disponibles
 
 - **CA mensuel** avec croissance MoM, YoY et cumul YTD
 - **Top 10 produits** par CA avec part de marché par catégorie
@@ -216,7 +216,7 @@ docker exec trino trino --server http://localhost:8080 \
 
 ---
 
-##  Arrêter l'infrastructure
+## Arrêter l'infrastructure
 
 ```bash
 docker-compose down          # Arrêter (données conservées)
@@ -225,7 +225,7 @@ docker-compose down -v       # Arrêter + supprimer les volumes
 
 ---
 
-##  Dépannage
+## Dépannage
 
 **Hive Metastore ne démarre pas :**
 ```bash
