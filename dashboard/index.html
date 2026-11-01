@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧊 Cube Analytique Ventes | Spark SQL + Trino</title>
+  <meta name="description"
+    content="Dashboard analytique ventes — Cube OLAP construit avec Apache Spark SQL et interrogé via Trino" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo"></div>
+      <div class="header-titles">
+        <h1 class="header-title">Cube Analytique Ventes</h1>
+        <p class="header-sub">Pipeline Spark SQL → Trino | Données 2023–2024</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="badge badge-spark"> Spark SQL 3.5</span>
+      <span class="badge badge-trino"> Trino 426</span>
+      <div class="last-refresh">
+        Dernière maj : <span id="refresh-time"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Filtres ─────────────────────────────────────────── -->
+  <nav class="filters-bar">
+    <div class="filter-group">
+      <label>Année</label>
+      <select id="filter-annee" onchange="updateDashboard()">
+        <option value="all">Toutes</option>
+        <option value="2023">2023</option>
+        <option value="2024" selected>2024</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Catégorie</label>
+      <select id="filter-cat" onchange="updateDashboard()">
+        <option value="all">Toutes</option>
+        <option value="Électronique">Électronique</option>
+        <option value="Vêtements">Vêtements</option>
+        <option value="Alimentation">Alimentation</option>
+        <option value="Maison & Déco">Maison & Déco</option>
+        <option value="Sport & Loisirs">Sport & Loisirs</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Canal</label>
+      <select id="filter-canal" onchange="updateDashboard()">
+        <option value="all">Tous</option>
+        <option value="Magasin">Magasin</option>
+        <option value="En ligne">En ligne</option>
+        <option value="Application">Application</option>
+        <option value="Téléphone">Téléphone</option>
+      </select>
+    </div>
+    <button class="btn-refresh" onclick="refreshData()">
+      <span id="refresh-icon">↻</span> Actualiser
+    </button>
+  </nav>
+
+  <!-- ── KPI Cards ───────────────────────────────────────── -->
+  <section class="kpi-grid" id="kpi-grid">
+    <div class="kpi-card kpi-purple" id="kpi-ca">
+      <div class="kpi-header">
+        <span class="kpi-icon"></span>
+        <span class="kpi-label">CA Total HT</span>
+      </div>
+      <div class="kpi-value" id="kpi-ca-val">—</div>
+      <div class="kpi-trend positive" id="kpi-ca-trend">
+        <span>↑ +18.4%</span> vs 2023
+      </div>
+      <div class="kpi-sub" id="kpi-ca-sub">—</div>
+    </div>
+    <div class="kpi-card kpi-blue" id="kpi-panier">
+      <div class="kpi-header">
+        <span class="kpi-icon"></span>
+        <span class="kpi-label">Panier Moyen</span>
+      </div>
+      <div class="kpi-value" id="kpi-panier-val">—</div>
+      <div class="kpi-trend positive" id="kpi-panier-trend">
+        <span>↑ +5.2%</span> vs 2023
+      </div>
+      <div class="kpi-sub" id="kpi-panier-sub">—</div>
+    </div>
+    <div class="kpi-card kpi-green" id="kpi-marge">
+      <div class="kpi-header">
+        <span class="kpi-icon"></span>
+        <span class="kpi-label">Taux de Marge</span>
+      </div>
+      <div class="kpi-value" id="kpi-marge-val">—</div>
+      <div class="kpi-trend positive" id="kpi-marge-trend">
+        <span>↑ +1.8pp</span> vs 2023
+      </div>
+      <div class="kpi-sub" id="kpi-marge-sub">—</div>
+    </div>
+    <div class="kpi-card kpi-orange" id="kpi-tx">
+      <div class="kpi-header">
+        <span class="kpi-icon"></span>
+        <span class="kpi-label">Transactions</span>
+      </div>
+      <div class="kpi-value" id="kpi-tx-val">—</div>
+      <div class="kpi-trend positive" id="kpi-tx-trend">
+        <span>↑ +12.1%</span> vs 2023
+      </div>
+      <div class="kpi-sub" id="kpi-tx-sub">—</div>
+    </div>
+  </section>
+
+  <!-- ── Graphiques principaux ──────────────────────────── -->
+  <section class="charts-grid">
+
+    <!-- Évolution CA mensuelle -->
+    <div class="chart-card chart-wide">
+      <div class="chart-header">
+        <div>
+          <h2 class="chart-title"> Évolution du CA Mensuel</h2>
+          <p class="chart-subtitle">Comparaison 2023 vs 2024 avec croissance MoM</p>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-dot" style="background:#818cf8"></span>2023
+          <span class="legend-dot" style="background:#a78bfa; margin-left:12px"></span>2024
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="chart-ca-mensuel"></canvas>
+      </div>
+    </div>
+
+    <!-- Top catégories -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <h2 class="chart-title">CA par Catégorie</h2>
+          <p class="chart-subtitle">Répartition 2024</p>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="chart-categories"></canvas>
+      </div>
+    </div>
+
+    <!-- Canaux de vente -->
+    <div class="chart-card chart-small">
+      <div class="chart-header">
+        <div>
+          <h2 class="chart-title"> Canaux de Vente</h2>
+          <p class="chart-subtitle">Part du CA total</p>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="chart-canaux"></canvas>
+      </div>
+    </div>
+
+    <!-- Performance régionale -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <h2 class="chart-title">Performance Régionale</h2>
+          <p class="chart-subtitle">CA HT par région</p>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="chart-regions"></canvas>
+      </div>
+    </div>
+
+    <!-- Segments clients -->
+    <div class="chart-card chart-small">
+      <div class="chart-header">
+        <div>
+          <h2 class="chart-title"> Segments Clients</h2>
+          <p class="chart-subtitle">LTV par segment</p>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="chart-segments"></canvas>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── Top Produits (tableau) ──────────────────────────── -->
+  <section class="table-section">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <h2 class="chart-title"> Top 10 Produits par CA (2024)</h2>
+          <p class="chart-subtitle">Requête Trino :
+            <code>SELECT * FROM hive.ventes_dw.cube_produit_top WHERE rang_ca &lt;= 10</code>
+          </p>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table" id="top-produits-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Produit</th>
+              <th>Catégorie</th>
+              <th>CA HT</th>
+              <th>Volume</th>
+              <th>Marge</th>
+              <th>Taux Marge</th>
+              <th>Performance</th>
+            </tr>
+          </thead>
+          <tbody id="top-produits-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Architecture info ─────────────────────────────── -->
+  <section class="arch-section">
+    <div class="arch-card">
+      <h3> Pipeline Spark SQL</h3>
+      <div class="arch-steps">
+        <div class="arch-step">
+          <span class="step-num">1</span>
+          <span>Lecture CSV (raw-data)</span>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-step">
+          <span class="step-num">2</span>
+          <span>Nettoyage & Validation</span>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-step">
+          <span class="step-num">3</span>
+          <span>Schéma en étoile Parquet</span>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-step">
+          <span class="step-num">4</span>
+          <span>Cube OLAP agrégé</span>
+        </div>
+      </div>
+    </div>
+    <div class="arch-card">
+      <h3> Requêtes Trino</h3>
+      <div class="arch-steps">
+        <div class="arch-step active">
+          <span class="step-num">01</span>
+          <span>CA Mensuel (YoY/MoM)</span>
+        </div>
+        <div class="arch-step active">
+          <span class="step-num">02</span>
+          <span>Top Produits</span>
+        </div>
+        <div class="arch-step active">
+          <span class="step-num">03</span>
+          <span>Performance Régionale</span>
+        </div>
+        <div class="arch-step active">
+          <span class="step-num">04</span>
+          <span>Segments RFM</span>
+        </div>
+      </div>
+    </div>
+    <div class="arch-card">
+      <h3> Tables du Cube</h3>
+      <div class="table-list">
+        <div class="table-item fact">fact_ventes <em>500k lignes · partitionné annee/mois</em></div>
+        <div class="table-item dim">dim_temps <em>730 jours</em></div>
+        <div class="table-item dim">dim_produit <em>500 produits</em></div>
+        <div class="table-item dim">dim_client <em>10 000 clients</em></div>
+        <div class="table-item dim">dim_magasin <em>50 magasins</em></div>
+        <div class="table-item agg">cube_mensuel_categorie</div>
+        <div class="table-item agg">cube_mensuel_region</div>
+        <div class="table-item agg">cube_mensuel_canal</div>
+        <div class="table-item agg">cube_produit_top</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span>Cube Analytique Ventes</span>
+    <span>|</span>
+    <span>Spark SQL 3.5 + Trino 426 + Hive Metastore 3.1</span>
+    <span>|</span>
+    <span>Stockage : Volume Docker local (/opt/warehouse)</span>
+    <span>|</span>
+    <a href="http://localhost:8080" target="_blank" class="footer-link">Spark UI ↗</a>
+    <a href="http://localhost:8085" target="_blank" class="footer-link">Trino UI ↗</a>
+  </footer>
+
+  <script src="dashboard.js"></script>
+</body>
+
+</html>

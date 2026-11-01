@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Large synthetic datasets (regenerable via python data/generate_data.py)
+data/*.csv
+
+# Local warehouse / Parquet files
+warehouse/
+*.parquet
+
+# Logs and temporary files
+*.log
+temp/
+tmp/
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
